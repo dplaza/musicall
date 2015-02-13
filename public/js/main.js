@@ -25,6 +25,10 @@ eventsFromServer: {
         addLine(data.message);
     });
 
+    //Event 'debug'    
+    io.on('debug', function(data) {
+        console.log('[DEBUG MSG] ' + data);
+    });
 }
 
 domEvents: {

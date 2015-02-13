@@ -13,7 +13,11 @@ app.use(express.static(__dirname + '/public'));
 
 //Routes
 app.get('/', function(req, res) {
-    console.log('new connection: ' + request.connection.remoteAddress);
+
+    ip = getClientIp(req);
+    var msg = 'new connection: ' + ip;
+    console.log(msg);
+
     res.sendFile(__dirname + '/index.html');
 });
 
@@ -23,7 +27,10 @@ var users = [];
 
 io.on('connection', function(socket) {
 
-    var address = socket.client.conn.remoteAddress;
+    //var address = socket.client.conn.remoteAddress;
+    var address = socket.request.socket.remoteAddress;
+
+    debugmsg(address);
 
     //Event 'join'
     socket.on('join', function(data) {
@@ -70,11 +77,39 @@ io.on('connection', function(socket) {
         console.log(msg);
         io.emit('exit', msg);
     });
-
-
 });
 
 //Run web server
 server.listen(app.get('port'), function() {
-  console.log("Node app is running at localhost:" + app.get('port'));
+    console.log("Node app is running at localhost:" + app.get('port'));
 });
+
+
+function debugmsg(data) {
+    console.log(data);
+    io.emit('debug', data);
+}
+
+
+function getClientIp(req) {
+
+    var ipAddress;
+    // Amazon EC2 / Heroku workaround to get real client IP
+    var forwardedIpsStr = req.header('x-forwarded-for');
+
+    if (forwardedIpsStr) {
+        // 'x-forwarded-for' header may return multiple IP addresses in
+        // the format: "client IP, proxy 1 IP, proxy 2 IP" so take the
+        // the first one
+        var forwardedIps = forwardedIpsStr.split(',');
+        ipAddress = forwardedIps[0];
+    }
+
+    if (!ipAddress) {
+        // Ensure getting client IP address still works in
+        // development environment
+        ipAddress = req.connection.remoteAddress;
+    }
+
+    return ipAddress;
+};
