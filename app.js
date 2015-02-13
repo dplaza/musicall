@@ -5,7 +5,7 @@ var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
-
+var ip;
 
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
@@ -13,11 +13,6 @@ app.use(express.static(__dirname + '/public'));
 
 //Routes
 app.get('/', function(req, res) {
-
-    ip = getClientIp(req);
-    var msg = 'new connection: ' + ip;
-    console.log(msg);
-
     res.sendFile(__dirname + '/index.html');
 });
 
@@ -27,30 +22,29 @@ var users = [];
 
 io.on('connection', function(socket) {
 
-    //var address = socket.client.conn.remoteAddress;
-    var address = socket.request.socket.remoteAddress;
-
-    debugmsg(address);
-
     //Event 'join'
     socket.on('join', function(data) {
 
-        socket.nickname = data;
+        socket.nickname = data.nickname;
+        socket.ip = data.ip.ip
 
-        console.log(socket.nickname + " joins from " + address);
+        console.log(data.nickname + " joins from " + socket.ip);
 
         //we call the api to get the country
-        var url = 'http://api.hostip.info/get_json.php?ip=' + address;
+        //
+        //http://www.telize.com/geoip/46.18.96.130
+        //
+        var url = 'http://www.telize.com/geoip/' + socket.ip;
+        request.get(url, function(error, response, json) {
 
-        request.get(url, function(error, response, body) {
-
-            var location = JSON.parse(body);
+            var location = JSON.parse(json);
+            console.log(location.city + ', ' + location.country);
 
             var newUser = {
-                'nickname': data,
+                'nickname': socket.nickname,
                 'loginDate': Date.now(),
-                'address': address,
-                'country': location.country_name
+                'address': socket.ip,
+                'country': location.city + ', ' + location.region + ', ' + location.country
             }
 
             users.push(newUser);
@@ -89,27 +83,3 @@ function debugmsg(data) {
     console.log(data);
     io.emit('debug', data);
 }
-
-
-function getClientIp(req) {
-
-    var ipAddress;
-    // Amazon EC2 / Heroku workaround to get real client IP
-    var forwardedIpsStr = req.header('x-forwarded-for');
-
-    if (forwardedIpsStr) {
-        // 'x-forwarded-for' header may return multiple IP addresses in
-        // the format: "client IP, proxy 1 IP, proxy 2 IP" so take the
-        // the first one
-        var forwardedIps = forwardedIpsStr.split(',');
-        ipAddress = forwardedIps[0];
-    }
-
-    if (!ipAddress) {
-        // Ensure getting client IP address still works in
-        // development environment
-        ipAddress = req.connection.remoteAddress;
-    }
-
-    return ipAddress;
-};

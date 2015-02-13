@@ -7,8 +7,20 @@ eventsFromServer: {
 
     //Event 1 'connect'     //when i'm connected, this event is fired automatically
     io.on('connect', function() {
+
         nickname = prompt("what is your nickname?");
-        io.emit('join', nickname); //i send my nickname to server      
+        
+        var url = 'http://api.ipify.org?format=json';
+        $.getJSON(url, function(ip) {
+            var data = {
+                'nickname': nickname,
+                'ip': ip
+            };
+
+            console.log(JSON.stringify(data));
+
+            io.emit('join', data);
+        });
     });
 
     //Event 2 'join' //when someone joins
@@ -35,7 +47,7 @@ domEvents: {
 
 
     $(document).ready(function() {
-        //conductor = new BandJS();
+        initAudio();
     });
 
 
