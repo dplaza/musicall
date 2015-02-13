@@ -4,11 +4,8 @@ var request = require('request');
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
-//var socketSessions = require('socket.io-handshake');
 var io = require('socket.io')(server);
 
-
-//io.use( socketSessions() );
 app.use(express.static(__dirname + '/public'));
 
 
@@ -54,12 +51,24 @@ io.on('connection', function(socket) {
 
     });
 
+    //Event 'sound'
+    socket.on('sound', function(data) {
+        var msg = socket.nickname + ' playing sound ' + data;
+        var sendData = {
+            'number': data,
+            'message': msg
+        };
+        console.log(msg);
+        io.emit('sound', sendData); //i send the sound to all
+    });
+
     //Event 'disconnect'
     socket.on('disconnect', function() {
         var msg = socket.nickname + ' has gone';
         console.log(msg);
         io.emit('exit', msg);
     });
+
 
 });
 
