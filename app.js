@@ -23,7 +23,7 @@ var users = [];
 
 io.on('connection', function(socket) {
 
-    var address = socket.handshake.address;
+    var address = socket.client.conn.remoteAddress;
 
     //Event 'join'
     socket.on('join', function(data) {
@@ -32,9 +32,9 @@ io.on('connection', function(socket) {
 
         console.log(socket.nickname + " joins from " + address);
 
+        //we call the api to get the country
         var url = 'http://api.hostip.info/get_json.php?ip=' + address;
 
-        //we call the api to get the country
         request.get(url, function(error, response, body) {
 
             var location = JSON.parse(body);
