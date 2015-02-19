@@ -33,8 +33,9 @@ io.on('connection', function(socket) {
         //we call the api to get the country
         //
         //http://www.telize.com/geoip/46.18.96.130
+        //http://ip-api.com/json/201.239.17.43
         //
-        var url = 'http://www.telize.com/geoip/' + socket.ip;
+        var url = 'http://ip-api.com/json/' + socket.ip;
         request.get(url, function(error, response, json) {
 
             var location = JSON.parse(json);
@@ -44,7 +45,7 @@ io.on('connection', function(socket) {
                 'nickname': socket.nickname,
                 'loginDate': Date.now(),
                 'address': socket.ip,
-                'country': location.city + ', ' + location.region + ', ' + location.country
+                'country': location.city + ', ' + location.regionName + ', ' + location.country
             }
 
             users.push(newUser);
